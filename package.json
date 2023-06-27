@@ -8,9 +8,8 @@
     "build:64": "electron-builder --windows nsis:x64",
     "build:mac": "electron-builder --macos --universal"
   },
-  "author": "oxizen@gmail.com",
-  "private": true,
-  "license": "no license",
+  "author": "Ben Heo <oxizen@gmail.com>",
+  "license": "MIT",
   "build": {
     "productName": "MI18N",
     "appId": "kr.oxizen.i18n-tool",
