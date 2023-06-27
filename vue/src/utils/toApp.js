@@ -1,0 +1,1 @@
+export const toApp = (command, payload) => window.appInterface.invoke(command, payload);
