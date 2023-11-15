@@ -91,8 +91,13 @@ export default {
           this.model.publicKey = await toApp('getPublicKey', this.model);
         }
         await this.$store.commit('addRepository', this.model);
+        if (this.model.method === 'ssh') {
+          this.publicKey = this.model.publicKey;
+        } else {
+          this.$store.commit('updateRepository', this.model);
+          this.$emit('resolve');
+        }
         this.$toast('저장소가 추가되었습니다');
-        this.publicKey = this.model.publicKey;
       }
     },
     async save() {
