@@ -1,9 +1,9 @@
 import _set from 'lodash/set';
 
-export const makeJs = flattened => {
+export const makeJs = (flattened, module) => {
   const root = {};
   flattened.forEach(it => _set(root, it.path, it.value));
-  let result = 'module.exports = {\n';
+  let result = module === 'mjs' ? 'export default {\n' : 'module.exports = {\n';
   const indentStep = '  ';
   let indent = '  ';
   if (!root) return result;

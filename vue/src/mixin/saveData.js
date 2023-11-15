@@ -6,12 +6,12 @@ export default {
   methods: {
     async saveJsData() {
       for (const chapter in this.full) {
-        await toApp('saveJs', { jsString: makeJs(this.full[chapter]), file: chapter });
+        await toApp('saveJs', { jsString: makeJs(this.full[chapter], this.currentRepo.module), file: chapter });
       }
       await this.getData();
     },
     async updateJsData(v) {
-      await toApp('saveJs', { jsString: makeJs(v), file: this.chapter });
+      await toApp('saveJs', { jsString: makeJs(v, this.currentRepo.module), file: this.chapter });
       this.$toast('저장되었습니다');
       await this.getData();
     },

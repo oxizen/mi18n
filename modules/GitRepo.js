@@ -24,7 +24,7 @@ class GitRepo {
   }
 
   get sshOption() {
-    return `-c core.sshCommand="ssh -F none -o StrictHostKeyChecking=no -i '${dataPath.getKeyPath(this.repo.name)}'"`;
+    return this.repo.method === 'https' ? '' : `-c core.sshCommand="ssh -F none -o StrictHostKeyChecking=no -i '${dataPath.getKeyPath(this.repo.name)}'"`;
   }
 
   getPublicKey() {
@@ -96,7 +96,7 @@ class GitRepo {
       }).catch(e => {
         if (e === 'NO_REPOSITORY') {
           this.callback('원격 저장소 내용을 복제중입니다', true);
-          this.exec(`clone ${this.repo.sshUrl} .`).then(() => {
+          this.exec(`clone ${this.repo.method === 'https' ? this.repo.httpsUrl : this.repo.sshUrl} .`).then(() => {
             this._prepare().then(() => {
               this.callback();
               resolve(false);
@@ -135,10 +135,18 @@ class GitRepo {
         if (e) this.callback('경로가 유효하지 않습니다');
         else {
           const filter = this.repo.filter ? this.repo.filter.split(',') : null;
-          files.map(n => n.replace(/\.js/, '')).filter(n => n !== 'index' && (!filter || filter.includes(n))).sort((a,b) => a === 'common' ? -1 : b === 'common' ? 1 : 0).forEach(file => {
-            if (!result[file]) result[file] = require(path.join(dataPath.getRepoPath(this.repo.name), repoPath, file + '.js'))
-          })
-          resolve();
+          if (this.repo.module === 'mjs') {
+            Promise.all(files.map(n => n.replace(/\.mjs/, '')).filter(n => n !== 'index' && (!filter || filter.includes(n))).sort((a, b) => a === 'common' ? -1 : b === 'common' ? 1 : 0).map(file => {
+              return import(path.join(dataPath.getRepoPath(this.repo.name), repoPath, file + `.mjs?${Date.now()}`)).then(v => {
+                result[file] = v.default;
+              });
+            })).then(resolve);
+          } else {
+            files.map(n => n.replace(/\.js/, '')).filter(n => n !== 'index' && (!filter || filter.includes(n))).sort((a, b) => a === 'common' ? -1 : b === 'common' ? 1 : 0).forEach(file => {
+              if (!result[file]) result[file] = require(path.join(dataPath.getRepoPath(this.repo.name), repoPath, file + '.js'))
+            })
+            resolve();
+          }
         }
       });
     })
@@ -176,24 +184,27 @@ class GitRepo {
   }
 
   saveJs(jsString, file) {
+    const ext = this.repo.module === 'mjs' ? '.mjs' : '.js'
     return new Promise(resolve => {
-      if (this.repo.path2 && !fs.existsSync(path.join(dataPath.getRepoPath(this.repo.name), this.repo.path, file + '.js'))) {
-        fs.writeFile(path.join(dataPath.getRepoPath(this.repo.name), this.repo.path2, file + '.js'), jsString, resolve);
+      if (this.repo.path2 && !fs.existsSync(path.join(dataPath.getRepoPath(this.repo.name), this.repo.path, file + ext))) {
+        fs.writeFile(path.join(dataPath.getRepoPath(this.repo.name), this.repo.path2, file + ext), jsString, resolve);
       } else {
-        fs.writeFile(path.join(dataPath.getRepoPath(this.repo.name), this.repo.path, file + '.js'), jsString, resolve);
+        fs.writeFile(path.join(dataPath.getRepoPath(this.repo.name), this.repo.path, file + ext), jsString, resolve);
       }
     });
   }
 
   deleteJs(file) {
+    const ext = this.repo.module === 'mjs' ? '.mjs' : '.js'
     return new Promise(resolve => {
-      fs.rm(path.join(dataPath.getRepoPath(this.repo.name), this.repo.path, file + '.js'), resolve);
+      fs.rm(path.join(dataPath.getRepoPath(this.repo.name), this.repo.path, file + ext), resolve);
     });
   }
 
   renameJs(org, change) {
+    const ext = this.repo.module === 'mjs' ? '.mjs' : '.js'
     return new Promise(resolve => {
-      fs.rename(path.join(dataPath.getRepoPath(this.repo.name), this.repo.path, org + '.js'), path.join(dataPath.getRepoPath(this.repo.name), this.repo.path, change + '.js'), resolve);
+      fs.rename(path.join(dataPath.getRepoPath(this.repo.name), this.repo.path, org + ext), path.join(dataPath.getRepoPath(this.repo.name), this.repo.path, change + ext), resolve);
     });
   }
 
