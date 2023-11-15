@@ -23,9 +23,10 @@ export const makeJs = flattened => {
         i = 0;
       } else {
         if (value) {
-          const s = value.toString();
+          let s = value.toString();
           const q = s.includes('\n') || s.includes("'") ? '`' : `'`;
-          result += indent + key + ': ' + q + value + q + ',\n';
+          if (q === '`') s = s.replace(/`/g, '\\`');
+          result += indent + key + ': ' + q + s + q + ',\n';
         }
         while (i + 1 >= keys.length && prev) {
           [i, obj, keys, prev] = prev;
