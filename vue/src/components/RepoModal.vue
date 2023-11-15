@@ -82,22 +82,19 @@ export default {
   },
   methods: {
     async next() {
-      if (this.publicKey) {
+      if (this.model.method === 'https') {
+        if (!this.$validate('[data-validate]')) return;
+        await this.$store.commit('addRepository', this.model);
         this.$store.commit('changeRepository', this.model.name);
-        this.$emit('close');
+        this.$emit('resolve');
+      } else if (this.publicKey) {
+        this.$store.commit('changeRepository', this.model.name);
+        this.$emit('resolve');
       } else {
         if (!this.$validate('[data-validate]')) return;
-        if (this.model.method === 'ssh') {
-          this.model.publicKey = await toApp('getPublicKey', this.model);
-        }
+        this.model.publicKey = await toApp('getPublicKey', this.model);
         await this.$store.commit('addRepository', this.model);
-        if (this.model.method === 'ssh') {
-          this.publicKey = this.model.publicKey;
-        } else {
-          this.$store.commit('updateRepository', this.model);
-          this.$emit('resolve');
-        }
-        this.$toast('저장소가 추가되었습니다');
+        this.publicKey = this.model.publicKey;
       }
     },
     async save() {
