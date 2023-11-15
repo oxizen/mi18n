@@ -46,6 +46,9 @@ class GitRepo {
    */
   exec(command) {
     return new Promise((resolve, reject) => {
+      if (!fs.existsSync(path.join(dataPath.getRepoPath(this.repo.name), '.git'))) {
+        return reject('NO_REPOSITORY');
+      }
       exec(`git ${this.sshOption} ${command}`, { cwd: this.repoPath }, (e, i, o) => {
         this.windowOut('------------------------------------------');
         if (e) {
