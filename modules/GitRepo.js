@@ -49,22 +49,22 @@ class GitRepo {
       if (!command.startsWith('clone') && !fs.existsSync(path.join(dataPath.getRepoPath(this.repo.name), '.git'))) {
         return reject('NO_REPOSITORY');
       }
-      exec(`git ${this.sshOption} ${command}`, { cwd: this.repoPath }, (e, i, o) => {
+      const langEnv = process.platform === 'win32' ? '' : 'LANG=en_GB ';
+      exec(`${langEnv}git ${this.sshOption} ${command}`, { cwd: this.repoPath }, (e, i, o) => {
         this.windowOut('------------------------------------------');
         if (e) {
           const out = o.toString('utf-8');
           const code = out.includes("'git'") ? 'NO_GIT'
-            : out.includes('command not found') ? 'NO_GIT'
-            : out.includes('not a git repository') ? 'NO_REPOSITORY'
+            : out.includes('command not found') || out.includes('파일이 아닙니다') ? 'NO_GIT'
             : out.includes('did not match any file(s) known to git') ? 'NO_BRANCH'
             : out.includes('CommandLineTools') ? 'MAC_TOOLS'
             : out.includes('Permission denied (publickey)') ? 'PUBLIC_KEY_EXPIRED'
             : out.includes('would be overwritten') ? 'CONFLICT'
             : out.includes('Resolve all conflicts') ? 'CONFLICT'
             : out.includes('You are not currently on a branch') ? 'CONFLICT'
-            : out.includes('You have unstaged changes') ? 'IGNORE'
             : out.includes('middle of another rebase') ? 'CONFLICT'
             : out.includes('rejected') ? 'CONFLICT'
+            : out.includes('You have unstaged changes') ? 'IGNORE'
             : out;
           this.windowOut('git ' + command + ' error =>');
           this.windowOut(out);
